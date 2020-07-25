@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -e
+
 echo PATH = $PATH
 echo vessel @ `which vessel`
 
-ALICE_HOME=$(mktemp -d -t alice)
-BOB_HOME=$(mktemp -d -t alice)
+ALICE_HOME=$(mktemp -d -t alice-XXXXXXXX)
+BOB_HOME=$(mktemp -d -t alice-XXXXXXXX)
 HOME=$ALICE_HOME
 
 dfx start --background
