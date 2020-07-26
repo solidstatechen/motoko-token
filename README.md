@@ -33,5 +33,5 @@ public query func balanceOf(owner : Owner) : async ?Nat
 
 Transfer tokens to another token owner.
 ```motoko
-public shared func transfer(to : Owner, ammount : Nat) : async Bool
+public shared func transfer(to : Owner, amount : Nat) : async Bool
 ```

@@ -75,17 +75,17 @@ actor Token {
   // Transfers tokens to another token owner.
   public shared {
     caller = caller;
-  } func transfer(to : Owner, ammount : Nat) : async Bool {
+  } func transfer(to : Owner, amount : Nat) : async Bool {
     switch (Hex.decode(to)) {
       case (#ok receiver) {
         let sender = Util.unpack(caller);
         let balance = Option.get(find(sender), 0);
-        if (balance < ammount) {
+        if (balance < amount) {
           return false;
         } else {
-          let difference = balance - ammount;
+          let difference = balance - amount;
           replace(sender, if (difference == 0) null else ?difference);
-          replace(receiver, ?(Option.get(find(receiver), 0) + ammount));
+          replace(receiver, ?(Option.get(find(receiver), 0) + amount));
           return true;
         };
       };
