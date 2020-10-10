@@ -35,3 +35,19 @@ Transfer tokens to another token owner.
 ```motoko
 public shared func transfer(to : Owner, amount : Nat) : async Bool
 ```
+
+Allows `spender` to spend `amount` tokens from function caller
+```motoko
+public shared func approve(spender : Owner, amount : Nat) async Bool
+```
+
+Returns the amount of tokens that `spender` can spend from `owner`
+```motoko
+public query func allowance(owner : Owner, spender : Owner) async Nat
+```
+
+Transfer `amount` tokens from `owner` to `to`. Function caller should have permission to do so.
+See function `approve`.
+```motoko
+public shared func transferFrom(owner : Owner, to : Owner, amount : Nat) async Bool
+```
