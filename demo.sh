@@ -6,7 +6,8 @@ echo PATH = $PATH
 echo vessel @ `which vessel`
 
 ALICE_HOME=$(mktemp -d -t alice-XXXXXXXX)
-BOB_HOME=$(mktemp -d -t alice-XXXXXXXX)
+BOB_HOME=$(mktemp -d -t bob-XXXXXXXX)
+DAN_HOME=$(mktemp -d -t dan-XXXXXXXX)
 HOME=$ALICE_HOME
 
 dfx start --background
@@ -20,6 +21,10 @@ ALICE_PUBLIC_KEY=$( \
 )
 BOB_PUBLIC_KEY=$( \
     HOME=$BOB_HOME dfx canister call WhoAmI whoami \
+        | awk -F '"' '{printf $2}' \
+)
+DAN_PUBLIC_KEY=$( \
+    HOME=$DAN_HOME dfx canister call WhoAmI whoami \
         | awk -F '"' '{printf $2}' \
 )
 
@@ -50,3 +55,52 @@ echo Alice = $( \
 echo Bob = $( \
     eval dfx canister call Token balanceOf "'(\"$BOB_PUBLIC_KEY\")'" \
 )
+
+echo
+echo == Allows Dan to spend 50 tokens from Alice
+echo
+
+eval dfx canister call Token approve "'(\"$DAN_PUBLIC_KEY\", 50)'"
+
+echo
+echo == Allowances for Bob and Alice
+echo
+
+echo Alices allowance for Dan = $( \
+    eval dfx canister call Token allowance "'(\"$ALICE_PUBLIC_KEY\", \"$DAN_PUBLIC_KEY\")'" \
+)
+echo Alices allowance for Bob = $( \
+    eval dfx canister call Token allowance "'(\"$ALICE_PUBLIC_KEY\", \"$BOB_PUBLIC_KEY\")'" \
+)
+
+echo
+echo == Dan transfers 40 tokens from Alice to Bob
+echo
+
+HOME=$DAN_HOME
+eval dfx canister call Token transferFrom "'(\"$ALICE_PUBLIC_KEY\", \"$BOB_PUBLIC_KEY\", 40)'"
+
+echo
+echo == Token balance for Bob and Alice
+echo
+
+echo Alice = $( \
+    eval dfx canister call Token balanceOf "'(\"$ALICE_PUBLIC_KEY\")'" \
+)
+echo Bob = $( \
+    eval dfx canister call Token balanceOf "'(\"$BOB_PUBLIC_KEY\")'" \
+)
+
+echo
+echo == Alices allowance for Dan
+echo
+
+echo Alices allowance for Dan = $( \
+    eval dfx canister call Token allowance "'(\"$ALICE_PUBLIC_KEY\", \"$DAN_PUBLIC_KEY\")'" \
+)
+
+echo
+echo == Dan tries to transfer 20 tokens more from Alice to Bob: SHOULD FAIL!
+echo
+
+eval dfx canister call Token transferFrom "'(\"$ALICE_PUBLIC_KEY\", \"$BOB_PUBLIC_KEY\", 20)'"

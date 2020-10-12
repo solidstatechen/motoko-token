@@ -17,7 +17,7 @@ import Util "../src/Util";
 
 actor Token {
 
-  /**
+  /** 
    * Types
    */
 
@@ -26,6 +26,8 @@ actor Token {
 
   // The identity of a token owner in a machine readable format.
   private type OwnerBytes = [Word8];
+
+  private type AssocList<K, V> = AssocList.AssocList<K, V>;
 
   /**
    * State
@@ -40,6 +42,103 @@ actor Token {
   // The distribution of token balances.
   private stable var balances : AssocList.AssocList<OwnerBytes, Nat> =
     List.make((Util.unpack(initializer), N));
+  
+  private stable var allowances : AssocList<OwnerBytes, AssocList<OwnerBytes, Nat>> =
+    List.nil<(OwnerBytes, AssocList<OwnerBytes, Nat>)>();
+
+  public shared {
+    caller = caller;
+  } func approve(spender : Owner, amount : Nat) : async Bool {
+    switch (Hex.decode(spender)) {
+      case (#ok receiver) {
+        let sender = Util.unpack(caller);
+        let balance = Option.get(find(sender), 0);
+        if (balance < amount) {
+          return false;
+        } else {
+          //var allows = AssocList.find(allowances, receiver, eq);
+          var newAllows : AssocList<OwnerBytes, Nat> = List.make((receiver, amount));
+          let (newAllowances, _) = AssocList.replace(allowances, sender, eq, ?newAllows);
+          allowances := newAllowances;
+          return true;
+        };
+      };
+      case (#err (#msg msg)) {
+        throw Error.reject("Parse error on approve:spender => " # msg);
+      };
+    };
+  };
+
+  public shared {
+    caller = caller;
+  } func transferFrom(owner : Owner, to : Owner, amount : Nat) : async Bool {
+    let spender : OwnerBytes = Util.unpack(caller);
+    let allowedAmount = await allowance(owner, Hex.encode(spender));
+    if (allowedAmount < amount) {
+      return false;
+    };
+    switch (Hex.decode(to)) {
+      case (#ok receiver) {
+        switch(Hex.decode(owner)) {
+          case(#ok owner2) {
+            let balance = Option.get(find(owner2), 0);
+            if (balance < amount) {
+              return false;
+            } else {
+              // First, update owner's balance
+              let difference = balance - amount;
+              replace(owner2, if (difference == 0) null else ?difference);
+              replace(receiver, ?(Option.get(find(receiver), 0) + amount));
+              // Then update owner's allowance for spender
+              var newAllows : AssocList<OwnerBytes, Nat> = List.make((spender, allowedAmount - amount));
+              let (newAllowances, _) = AssocList.replace(allowances, owner2, eq, ?newAllows);
+              allowances := newAllowances;
+              return true;
+            };
+          };
+          case (#err (#msg msg)) {
+            throw Error.reject("Parse error on transferFrom:owner => " # msg);
+          };
+        };
+      };
+      case (#err (#msg msg)) {
+        throw Error.reject("Parse error on transferFrom:to => " # msg);
+      };
+    };
+
+    return true;
+
+  };
+
+  public query func allowance(owner : Owner, spender : Owner) : async Nat {
+    switch (Hex.decode(owner)) {
+      case (#ok owner2) {
+        switch(Hex.decode(spender)) {
+          case (#ok spender2) {
+            let allows = AssocList.find(allowances, owner2, eq);
+            switch(allows) {
+              case null return 0;
+              case (?allows) {
+                let xxx = AssocList.find(allows, spender2, eq);
+                switch(xxx) {
+                  case null return 0;
+                  case (?xxx) {
+                    return Option.get(?xxx, 0);
+                  };
+                };
+              };
+            };
+          };
+          case (#err (#msg msg)) {
+            throw Error.reject("Parse error on allowance:spender => " # msg);
+          };
+        };
+      };
+      case (#err (#msg msg)) {
+        throw Error.reject("Parse error on allowance:owner => " # msg);
+      };
+    };
+  };
 
   /**
    * High-Level API
