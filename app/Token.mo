@@ -27,6 +27,7 @@ actor Token {
   // The identity of a token owner in a machine readable format.
   private type OwnerBytes = [Word8];
 
+  // Simplifier for type AssocList.AssocList.
   private type AssocList<K, V> = AssocList.AssocList<K, V>;
 
   /**
@@ -43,23 +44,46 @@ actor Token {
   private stable var balances : AssocList.AssocList<OwnerBytes, Nat> =
     List.make((Util.unpack(initializer), N));
   
+  // Keeps a list of allowed spender and amount for each token owner
   private stable var allowances : AssocList<OwnerBytes, AssocList<OwnerBytes, Nat>> =
     List.nil<(OwnerBytes, AssocList<OwnerBytes, Nat>)>();
 
+  // Allows the given `spender` to spend `amount` tokens on behalf ot function caller
   public shared {
     caller = caller;
   } func approve(spender : Owner, amount : Nat) : async Bool {
     switch (Hex.decode(spender)) {
-      case (#ok receiver) {
-        let sender = Util.unpack(caller);
-        let balance = Option.get(find(sender), 0);
+      case (#ok spenderBytes) {
+        let ownerBytes = Util.unpack(caller);
+        let balance = Option.get(find(ownerBytes), 0);
         if (balance < amount) {
           return false;
         } else {
-          //var allows = AssocList.find(allowances, receiver, eq);
-          var newAllows : AssocList<OwnerBytes, Nat> = List.make((receiver, amount));
-          let (newAllowances, _) = AssocList.replace(allowances, sender, eq, ?newAllows);
-          allowances := newAllowances;
+          var allows : ?AssocList<OwnerBytes, Nat> = AssocList.find(allowances, ownerBytes, eq);
+          switch(allows) {
+            case null allows := ?List.make((spenderBytes, amount));
+            case (?allowance) {
+              var newAllowance : AssocList<OwnerBytes, Nat> = List.make((spenderBytes, amount));
+              // counter for checking whether requested amount is lower than remaining balance to spend
+              var counter : Nat = 0;
+              List.iterate<(OwnerBytes, Nat)>(allowance, func (data) {
+                counter += data.1;
+                if (eq(data.0, spenderBytes)) {
+                  // It was already included in the initalization of the list
+                  //newAllowance := List.push((data.0, amount), newAllowance);
+                } else {
+                  newAllowance := List.push((data.0, data.1), newAllowance);
+                };
+              });
+              if (counter + amount > balance) {
+                // Trying to allow an amount greater than balance
+                return false;
+              } else {
+                allows := ?newAllowance;
+              };
+            };
+          };
+          allowances := AssocList.replace(allowances, ownerBytes, eq, allows).0;
           return true;
         };
       };
@@ -69,31 +93,39 @@ actor Token {
     };
   };
 
+  // Transfers `amount` tokens from `owner` to `to`. Function caller should have permission to do so.
+  // See function 'approve'.
   public shared {
     caller = caller;
   } func transferFrom(owner : Owner, to : Owner, amount : Nat) : async Bool {
-    let spender : OwnerBytes = Util.unpack(caller);
-    let allowedAmount = await allowance(owner, Hex.encode(spender));
+    let spenderBytes : OwnerBytes = Util.unpack(caller);
+    let allowedAmount = await allowance(owner, Hex.encode(spenderBytes));
     if (allowedAmount < amount) {
       return false;
     };
     switch (Hex.decode(to)) {
       case (#ok receiver) {
         switch(Hex.decode(owner)) {
-          case(#ok owner2) {
-            let balance = Option.get(find(owner2), 0);
+          case(#ok ownerBytes) {
+            let balance = Option.get(find(ownerBytes), 0);
             if (balance < amount) {
               return false;
             } else {
               // First, update owner's balance
               let difference = balance - amount;
-              replace(owner2, if (difference == 0) null else ?difference);
+              replace(ownerBytes, if (difference == 0) null else ?difference);
               replace(receiver, ?(Option.get(find(receiver), 0) + amount));
-              // Then update owner's allowance for spender
-              var newAllows : AssocList<OwnerBytes, Nat> = List.make((spender, allowedAmount - amount));
-              let (newAllowances, _) = AssocList.replace(allowances, owner2, eq, ?newAllows);
-              allowances := newAllowances;
-              return true;
+              // Then update owner's allowance for spenderBytes
+              var allowance = AssocList.find<OwnerBytes, AssocList<OwnerBytes, Nat>>(allowances, ownerBytes, eq);
+              switch(allowance) {
+                case null return false;
+                case (?allowance) {
+                  let diff = allowedAmount - amount;
+                  let newAllowance = AssocList.replace<OwnerBytes, Nat>(allowance, spenderBytes, eq, if (diff == 0) null else ?diff).0;
+                  allowances := AssocList.replace(allowances, ownerBytes, eq, ?newAllowance).0;
+                  return true;
+                }
+              }
             };
           };
           case (#err (#msg msg)) {
@@ -110,12 +142,14 @@ actor Token {
 
   };
 
+  // Returns the amount of tokens that `owner` has granter `spender` to spent.
+  // See function `approve`.
   public query func allowance(owner : Owner, spender : Owner) : async Nat {
     switch (Hex.decode(owner)) {
-      case (#ok owner2) {
+      case (#ok ownerBytes) {
         switch(Hex.decode(spender)) {
           case (#ok spender2) {
-            let allows = AssocList.find(allowances, owner2, eq);
+            let allows = AssocList.find(allowances, ownerBytes, eq);
             switch(allows) {
               case null return 0;
               case (?allows) {
