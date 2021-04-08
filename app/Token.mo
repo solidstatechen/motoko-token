@@ -40,6 +40,12 @@ actor Token {
   // The total token supply.
   private let N : Nat = 1000000000;
 
+  //external_balance of token owner 
+  private let external_balance : Nat = 0;
+
+  //internal_balance of token owner 
+  private let internal_balance : Nat = 0;
+
   // The distribution of token balances.
   private stable var balances : AssocList.AssocList<OwnerBytes, Nat> =
     List.make((Util.unpack(initializer), N));
@@ -252,5 +258,13 @@ actor Token {
     return Array.equal<Word8>(x, y, func (xi, yi) {
       return xi == yi;
     });
+
+
+  //erc-20 rebase function
+  public query func rebase(supplyDelta : N) : async Text {
+    return "erc-20 rebase called"
+  } 
+
+
   };
 };
