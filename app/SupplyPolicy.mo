@@ -10,7 +10,8 @@ actor SupplyPolicy {
     public query func rebase(oracleRate : Nat) : ?Nat {
 
         if (oracleRate < 1.06 && oracleRate > 0.96){
-            //do nothing
+            //do adjustment
+            supplyDelta = 0;
         } else {
             //statically assigning target to 2019 CPI adjusted dollar
             target = 1.004;
