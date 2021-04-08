@@ -262,6 +262,11 @@ actor Token {
 
   //erc-20 rebase function
   public query func rebase(supplyDelta : N) : async Text {
+    
+    // If supplyDelta positive: add to totalSupply. If negative: subtract from totalSupply
+    N += (N * supplyDelta);
+    
+
     return "erc-20 rebase called"
   } 
 
