@@ -7,7 +7,7 @@ actor SupplyPolicy {
     public let supplyDelta : Nat = 0;
 
     //currently when rebase is called the caller must also input the days oracleRate
-    public query func rebase(oracleRate : Nat) : async ?Nat {
+    public query func rebase(oracleRate : Nat) : ?Nat {
 
         if (oracleRate < 1.06 && oracleRate > 0.96){
             //do nothing
