@@ -38,7 +38,9 @@ actor Token {
   private let initializer : Principal = Prim.caller();
 
   // The total token supply.
-  private let N : Nat = 1000000000;
+  var N = 1000000000;
+
+  private let adjustedSupply : Nat = 0;  
 
   //external_balance of token owner 
   private let external_balance : Nat = 0;
@@ -199,6 +201,19 @@ actor Token {
     return N;
   };
 
+  //erc-20 rebase function
+  public query func rebase(supplyDelta : Nat) : async Nat {
+    
+    N := N * supplyDelta;
+
+    // If supplyDelta positive: add to totalSupply. If negative: subtract from totalSupply
+    //N += (N * supplyDelta);
+    
+    //returns newly adjusted supply
+    return N;
+  }; 
+  
+
   // Returns the token balance of a token owner.
   public query func balanceOf(owner : Owner) : async ?Nat {
     switch (Hex.decode(owner)) {
@@ -260,18 +275,6 @@ actor Token {
     });
 
 
-  //erc-20 rebase function
-  public query func rebase(supplyDelta : Float64) : Float64 {
-    
-    let oldSupply = N;
-
-    // If supplyDelta positive: add to totalSupply. If negative: subtract from totalSupply
-    N += (N * supplyDelta);
-    
-    //returns newly adjusted supply
-    return N;
-  } 
-
-
+  
   };
 };

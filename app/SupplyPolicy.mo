@@ -1,13 +1,18 @@
-actor SupplyPolicy {
+import Debug "mo:base/Debug";
 
+actor SupplyPolicy {
+   
+
+    Debug.print("Hello World!");
+/*
     // init target var
     public let target : Nat = 0;
 
     //init change in supply coefficient
-    public let supplyDelta : Float64 = 0.0;
+    public let supplyDelta : Nat = 0;
 
     //currently when rebase is called the caller must also input the days oracleRate
-    public query func rebase(oracleRate : Float64) : ?Float64 {
+    public query func rebase(oracleRate : Nat) : async Bool {
 
         if (oracleRate < 1.06 & oracleRate > 0.96){
             //do adjustment
@@ -27,10 +32,10 @@ actor SupplyPolicy {
 
         }
 
-        return supplyDelta;
+        return true;
 
     };
-  
+  */
 };
 // ?v in motoko means non mandatory return for v
 // concat #
