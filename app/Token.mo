@@ -261,7 +261,7 @@ actor Token {
 
 
   //erc-20 rebase function
-  public query func rebase(supplyDelta : N) : Nat {
+  public query func rebase(supplyDelta : Float64) : Float64 {
     
     let oldSupply = N;
 

@@ -4,14 +4,14 @@ actor SupplyPolicy {
     public let target : Nat = 0;
 
     //init change in supply coefficient
-    public let supplyDelta : Nat = 0;
+    public let supplyDelta : Float64 = 0.0;
 
     //currently when rebase is called the caller must also input the days oracleRate
-    public query func rebase(oracleRate : Nat) : ?Nat {
+    public query func rebase(oracleRate : Float64) : ?Float64 {
 
-        if (oracleRate < 1.06 && oracleRate > 0.96){
+        if (oracleRate < 1.06 & oracleRate > 0.96){
             //do adjustment
-            supplyDelta = 0;
+            supplyDelta = 0.0;
         } else {
             //statically assigning target to 2019 CPI adjusted dollar
             target = 1.004;
@@ -32,3 +32,5 @@ actor SupplyPolicy {
     };
   
 };
+// ?v in motoko means non mandatory return for v
+// concat #
