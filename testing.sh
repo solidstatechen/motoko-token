@@ -1,14 +1,10 @@
-#!/bin/bash
-
 set -e
+echo "cleaning cache"
 
-echo PATH = $PATH
-echo vessel @ `which vessel`
 
-dfx start --background
+echo "building prototype"
+
 dfx canister create --all
-dfx build
+dfx build 
 dfx canister install --all
-
-eval dfx canister call SupplyPolicy rebase '(2.6423)'
-)
+echo "ready for commands"

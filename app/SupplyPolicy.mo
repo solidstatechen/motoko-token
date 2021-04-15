@@ -1,41 +1,47 @@
-import Debug "mo:base/Debug";
+import Int "mo:base/Int";
 
 actor SupplyPolicy {
-   
-
-    Debug.print("Hello World!");
-/*
-    // init target var
-    public let target : Nat = 0;
-
-    //init change in supply coefficient
-    public let supplyDelta : Nat = 0;
+  
+    var supplyDelta : Int = 0;
+    //statically assigning target to 2019 CPI adjusted dollar
+    var target : Int = 1005;
+    //reaction lag set to 30 days at launch. *current ampleforth reaction lag has changed to 10 days
+    var reactionLag : Int = 3; // change to 30 when using floats 
 
     //currently when rebase is called the caller must also input the days oracleRate
-    public query func rebase(oracleRate : Nat) : async Bool {
+    public query func rebase(oracleRate : Int) : async Int {
 
-        if (oracleRate < 1.06 & oracleRate > 0.96){
-            //do adjustment
-            supplyDelta = 0.0;
+        //confirm threshold correct
+        /*
+        if (oracleRate > 960) {
+            return 1;
         } else {
-            //statically assigning target to 2019 CPI adjusted dollar
-            target = 1.004;
+            return 2;
+        };
+*/
+        
+        if ((oracleRate > 960) and (oracleRate < 1060)){
+            //do nothing
+            return 3;
+
+        } else {
             
             //calculate supplyDelta
-            supplyDelta = ((oracleRate - target)/target) * 100;
-
-            //reaction lag set to 30 days at launch. *current ampleforth reaction lag has changed to 10 days
-            reactionLag = 30;
+            supplyDelta := oracleRate - target;
+            //current calculations allow working with ints 
+            supplyDelta := supplyDelta * 100;
+            supplyDelta := supplyDelta / target;
+            
 
             //dampen the supply adjustment over # of days
-            supplyDelta = supplyDelta/reactionLag;
-
-        }
-
-        return true;
+            supplyDelta := supplyDelta/reactionLag;
+            
+            //returned value is actual value * 10
+            return supplyDelta;
+        };
 
     };
-  */
+  
 };
 // ?v in motoko means non mandatory return for v
 // concat #

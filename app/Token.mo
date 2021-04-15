@@ -14,6 +14,8 @@ import List "mo:base/List";
 import Option "mo:base/Option";
 import Prim "mo:prim";
 import Util "../src/Util";
+import Int "mo:base/Int";
+
 
 actor Token {
 
@@ -38,15 +40,9 @@ actor Token {
   private let initializer : Principal = Prim.caller();
 
   // The total token supply.
-  var N = 1000000000;
+  var N = 50000000;
 
-  private let adjustedSupply : Nat = 0;  
-
-  //external_balance of token owner 
-  private let external_balance : Nat = 0;
-
-  //internal_balance of token owner 
-  private let internal_balance : Nat = 0;
+  var N_int :Int = 50000000;
 
   // The distribution of token balances.
   private stable var balances : AssocList.AssocList<OwnerBytes, Nat> =
@@ -200,17 +196,24 @@ actor Token {
   public query func totalSupply() : async Nat {
     return N;
   };
-
+  //Nat is for positive intergers 
   //erc-20 rebase function
-  public query func rebase(supplyDelta : Nat) : async Nat {
-    
-    N := N * supplyDelta;
+  public query func rebase(supplyDelta : Int) : async Int {
+    var actual_supply_delta : Int = 0;
+    var temp : Int = 0;
+
+    //change from int * 10 (for readability) to just int value ie 26 -> 2 no decimals :(
+    actual_supply_delta := supplyDelta / 10;
+
+    temp := N_int / 100;
+    temp := temp * actual_supply_delta;
+
 
     // If supplyDelta positive: add to totalSupply. If negative: subtract from totalSupply
-    //N += (N * supplyDelta);
-    
+    N_int += temp;
+
     //returns newly adjusted supply
-    return N;
+    return N_int;
   }; 
   
 
