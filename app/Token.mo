@@ -39,9 +39,10 @@ actor Token {
   // The initializer of this canister.
   private let initializer : Principal = Prim.caller();
 
-  // The total token supply.
+  // The total token supply. * Nat: natural numbers, no negatives
   var N = 50000000;
 
+  // total token supply as an int
   var N_int :Int = 50000000;
 
   // The distribution of token balances.
@@ -196,6 +197,7 @@ actor Token {
   public query func totalSupply() : async Nat {
     return N;
   };
+  
   //Nat is for positive intergers 
   //erc-20 rebase function
   public query func rebase(supplyDelta : Int) : async Int {
