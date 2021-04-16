@@ -4,35 +4,30 @@ actor SupplyPolicy {
   
     var supplyDelta : Int = 0;
     //statically assigning target to 2019 CPI adjusted dollar
-    var target : Int = 1005;
+    var target : Int = 1005 * 100000;
     //reaction lag set to 30 days at launch. *current ampleforth reaction lag has changed to 10 days
     var reactionLag : Int = 3; // change to 30 when using floats 
+    
+    var tempRate : Int = 0; 
 
     //currently when rebase is called the caller must also input the days oracleRate
     public query func rebase(oracleRate : Int) : async Int {
-
-        //confirm threshold correct
-        /*
-        if (oracleRate > 960) {
-            return 1;
-        } else {
-            return 2;
-        };
-*/
         
         if ((oracleRate > 960) and (oracleRate < 1060)){
             //do nothing
             return 3;
 
         } else {
-            
+
+            tempRate := oracleRate * 100000;
+
             //calculate supplyDelta
-            supplyDelta := oracleRate - target;
-            //current calculations allow working with ints 
-            supplyDelta := supplyDelta * 100;
+            supplyDelta := tempRate - target;
+
+            target := target / 100000;
+            
             supplyDelta := supplyDelta / target;
             
-
             //dampen the supply adjustment over # of days
             supplyDelta := supplyDelta/reactionLag;
             

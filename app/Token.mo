@@ -43,7 +43,26 @@ actor Token {
   var N = 50000000;
 
   // total token supply as an int
-  var N_int :Int = 50000000;
+  private stable var N_int : Int = 50000000;
+
+  public query func totalSupplyInt() : async Int {
+    return N_int;
+  };
+
+  //erc-20 rebase function
+  public func rebase(supplyDelta : Int) : async Int {
+    var temp : Int = 0;
+
+    temp := N_int / 100;
+    temp := temp * supplyDelta;
+    temp := temp / 10000;
+
+    // If supplyDelta positive: add to totalSupply. If negative: subtract from totalSupply
+    N_int += temp;
+
+    //returns newly adjusted supply
+    return N_int;
+  }; 
 
   // The distribution of token balances.
   private stable var balances : AssocList.AssocList<OwnerBytes, Nat> =
@@ -185,38 +204,18 @@ actor Token {
 
   // Returns the name of the token.
   public query func name() : async Text {
-    return "Internet Computer Token";
+    return "IC Ampleforth Token";
   };
 
   // Returns the symbol of the token.
   public query func symbol() : async Text {
-    return "ICT";
+    return "ICAT";
   };
 
   // Returns the total token supply.
   public query func totalSupply() : async Nat {
     return N;
   };
-  
-  //Nat is for positive intergers 
-  //erc-20 rebase function
-  public query func rebase(supplyDelta : Int) : async Int {
-    var actual_supply_delta : Int = 0;
-    var temp : Int = 0;
-
-    //change from int * 10 (for readability) to just int value ie 26 -> 2 no decimals :(
-    actual_supply_delta := supplyDelta / 10;
-
-    temp := N_int / 100;
-    temp := temp * actual_supply_delta;
-
-
-    // If supplyDelta positive: add to totalSupply. If negative: subtract from totalSupply
-    N_int += temp;
-
-    //returns newly adjusted supply
-    return N_int;
-  }; 
   
 
   // Returns the token balance of a token owner.
