@@ -15,7 +15,7 @@ actor SupplyPolicy {
         
         if ((oracleRate > 960) and (oracleRate < 1060)){
             //do nothing
-            return 3;
+            return 0;
 
         } else {
 
