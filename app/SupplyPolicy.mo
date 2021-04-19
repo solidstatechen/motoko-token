@@ -13,7 +13,7 @@ actor SupplyPolicy {
     //currently when rebase is called the caller must also input the days oracleRate
     public query func rebase(oracleRate : Int) : async Int {
         
-        if ((oracleRate > 960) and (oracleRate < 1060)){
+        if ((oracleRate > 950) and (oracleRate < 1065)){
             //do nothing
             return 0;
 
